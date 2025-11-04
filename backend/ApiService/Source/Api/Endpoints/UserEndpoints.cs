@@ -63,6 +63,17 @@ namespace Epam.ItMarathon.ApiService.Api.Endpoints
                 .WithSummary("Create and add user to a room.")
                 .WithDescription("Return created user info.");
 
+            _ = root.MapDelete("{id:long}", DeleteUser)
+                .AddEndpointFilterFactory(ValidationFactoryFilter.GetValidationFactory)
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError)
+                .WithSummary("Delete user by id. Admin userCode required.")
+                .WithDescription("Remove user from room. Only admin can remove users.");
+
             return application;
         }
 
@@ -128,6 +139,21 @@ namespace Epam.ItMarathon.ApiService.Api.Endpoints
             return result.IsFailure
                 ? result.Error.ValidationProblem()
                 : Results.Created(string.Empty, mapper.Map<UserCreationResponse>(result.Value));
+        }
+
+        /// <summary>
+        /// Delete user by id. Requires admin userCode query param.
+        /// </summary>
+        public static async Task<IResult> DeleteUser([FromRoute] ulong id, [FromQuery, Required] string? userCode,
+            IMediator mediator, CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send(new DeleteUserCommand(userCode!, id), cancellationToken);
+            if (result.IsFailure)
+            {
+                return result.Error.ValidationProblem();
+            }
+
+            return Results.NoContent();
         }
     }
 }
