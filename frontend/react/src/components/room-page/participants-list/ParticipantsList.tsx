@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useParams } from "react-router";
 import ParticipantCard from "@components/common/participant-card/ParticipantCard";
 import ParticipantDetailsModal from "@components/common/modals/participant-details-modal/ParticipantDetailsModal";
-import type { Participant } from "@types/api";
+import ConfirmDeleteModal from "@components/common/modals/confirm-delete-modal/ConfirmDeleteModal";
+import { useDeleteUser } from "@hooks/useDeleteUser";
+import type { Participant } from "../../../types/api";
 import {
   MAX_PARTICIPANTS_NUMBER,
   generateParticipantLink,
@@ -10,10 +11,17 @@ import {
 import { type ParticipantsListProps, type PersonalInformation } from "./types";
 import "./ParticipantsList.scss";
 
-const ParticipantsList = ({ participants }: ParticipantsListProps) => {
-  const { userCode } = useParams();
+const ParticipantsList = ({
+  participants,
+  userCode,
+  onParticipantDeleted,
+}: ParticipantsListProps) => {
   const [selectedParticipant, setSelectedParticipant] =
     useState<PersonalInformation | null>(null);
+  const [participantToDelete, setParticipantToDelete] =
+    useState<Participant | null>(null);
+
+  const { deleteUser } = useDeleteUser();
 
   const admin = participants?.find((participant) => participant?.isAdmin);
   const restParticipants = participants?.filter(
@@ -35,6 +43,29 @@ const ParticipantsList = ({ participants }: ParticipantsListProps) => {
   };
 
   const handleModalClose = () => setSelectedParticipant(null);
+
+  const handleDeleteButtonClick = (participant: Participant) => {
+    setParticipantToDelete(participant);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (participantToDelete && userCode) {
+      const success = await deleteUser(participantToDelete.id, userCode);
+      if (success) {
+        setParticipantToDelete(null);
+        if (onParticipantDeleted) {
+          onParticipantDeleted();
+        }
+      }
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setParticipantToDelete(null);
+  };
+
+  const currentUser = participants?.find((p) => p.userCode === userCode);
+  const isCurrentUserAdmin = currentUser?.isAdmin || false;
 
   return (
     <div
@@ -75,11 +106,19 @@ const ParticipantsList = ({ participants }: ParticipantsListProps) => {
               firstName={user?.firstName}
               lastName={user?.lastName}
               isCurrentUser={userCode === user?.userCode}
-              isCurrentUserAdmin={userCode === admin?.userCode}
+              isCurrentUserAdmin={isCurrentUserAdmin}
               participantLink={generateParticipantLink(user?.userCode)}
               onInfoButtonClick={
-                userCode === admin?.userCode && userCode !== user?.userCode
+                isCurrentUserAdmin && userCode !== user?.userCode
                   ? () => handleInfoButtonClick(user)
+                  : undefined
+              }
+              showDeleteButton={
+                isCurrentUserAdmin && userCode !== user?.userCode
+              }
+              onDeleteButtonClick={
+                isCurrentUserAdmin && userCode !== user?.userCode
+                  ? () => handleDeleteButtonClick(user)
                   : undefined
               }
             />
@@ -91,6 +130,15 @@ const ParticipantsList = ({ participants }: ParticipantsListProps) => {
             isOpen={!!selectedParticipant}
             onClose={handleModalClose}
             personalInfoData={selectedParticipant}
+          />
+        ) : null}
+
+        {participantToDelete ? (
+          <ConfirmDeleteModal
+            isOpen={!!participantToDelete}
+            onClose={handleDeleteCancel}
+            onConfirm={handleDeleteConfirm}
+            participantName={`${participantToDelete.firstName} ${participantToDelete.lastName}`}
           />
         ) : null}
       </div>

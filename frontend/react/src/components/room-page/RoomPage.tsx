@@ -4,7 +4,7 @@ import type {
   GetParticipantsResponse,
   GetRoomResponse,
   DrawRoomResponse,
-} from "@types/api.ts";
+} from "../../types/api";
 import Loader from "@components/common/loader/Loader.tsx";
 import { useFetch } from "@hooks/useFetch.ts";
 import useToaster from "@hooks/useToaster.ts";
@@ -87,6 +87,10 @@ const RoomPage = () => {
         participants={participants ?? []}
         roomDetails={roomDetails ?? ({} as GetRoomResponse)}
         onDrawNames={() => fetchRandomize()}
+        onParticipantDeleted={() => {
+          fetchRoomDetails();
+          fetchParticipants();
+        }}
       />
     </main>
   );

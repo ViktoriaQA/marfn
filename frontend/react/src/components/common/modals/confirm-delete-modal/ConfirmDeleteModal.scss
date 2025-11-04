@@ -1,0 +1,82 @@
+@use "../../../../assets/styles/extends";
+@use "../../../../assets/styles/colors";
+@use "../../../../assets/styles/variables";
+
+.confirm-delete-modal {
+  width: 384px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  overflow: hidden;
+  box-shadow: variables.$shadow;
+
+  &__top {
+    height: 90px;
+    width: 100%;
+    background-image: url("../../../../assets/images/backgrounds/snow-background.svg");
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &__title {
+    color: colors.$red-500;
+  }
+
+  &__bottom {
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    gap: 24px;
+    padding: 16px 24px 24px;
+    background-color: colors.$g-50;
+    text-align: center;
+  }
+
+  &__description {
+    @extend %body-md;
+    color: colors.$g-800;
+  }
+
+  &__warning {
+    @extend %body-sm;
+    color: colors.$g-600;
+    font-style: italic;
+    margin-top: -8px;
+  }
+
+  &__buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  &__remove-button {
+    background-color: #cc3332 !important;
+    border-color: #cc3332 !important;
+    color: colors.$g-50 !important;
+    border-radius: 24px !important;
+
+    &:hover {
+      background-color: #b82e2e !important;
+      border-color: #b82e2e !important;
+    }
+
+    &:active {
+      background-color: #a02929 !important;
+      border-color: #a02929 !important;
+    }
+
+    &:focus-visible {
+      outline: 1px solid colors.$orange-500;
+      border-radius: 24px !important;
+    }
+
+    &:disabled {
+      background-color: colors.$g-600 !important;
+      border-color: colors.$g-600 !important;
+      cursor: default;
+    }
+  }
+}

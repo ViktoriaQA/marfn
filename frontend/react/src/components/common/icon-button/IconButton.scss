@@ -6,7 +6,8 @@
   cursor: pointer;
 
   &--green,
-  &--white {
+  &--white,
+  &--red {
     &:focus-visible {
       outline: 1px solid colors.$orange-500;
       border-radius: 2px;
@@ -44,6 +45,23 @@
 
     &:active {
       fill: colors.$g-100;
+    }
+
+    &:disabled {
+      fill: colors.$g-600;
+    }
+  }
+
+  &--red {
+    fill: #cc3332;
+
+    &:hover,
+    &:focus-visible {
+      fill: #b82e2e;
+    }
+
+    &:active {
+      fill: #a02929;
     }
 
     &:disabled {

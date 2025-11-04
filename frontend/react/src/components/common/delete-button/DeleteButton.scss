@@ -1,0 +1,43 @@
+@use "../../../assets/styles/colors";
+
+.delete-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #cc3332 !important;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #b82e2e !important;
+  }
+
+  &:active {
+    color: #a02929 !important;
+  }
+
+  &:focus-visible {
+    outline: 1px solid colors.$orange-500;
+    border-radius: 2px;
+  }
+
+  &:disabled {
+    color: colors.$g-600;
+    cursor: default;
+  }
+
+  .anticon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit !important;
+  }
+
+  .anticon-delete {
+    color: #cc3332 !important;
+  }
+}

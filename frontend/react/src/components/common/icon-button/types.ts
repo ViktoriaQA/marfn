@@ -1,7 +1,14 @@
 import type { ButtonHTMLAttributes } from "react";
 
-export type IconName = "copy" | "edit" | "save" | "info" | "link" | "cross";
-export type IconColor = "green" | "white";
+export type IconName =
+  | "copy"
+  | "edit"
+  | "save"
+  | "info"
+  | "link"
+  | "cross"
+  | "delete";
+export type IconColor = "green" | "white" | "red";
 
 export type IconButtonProps = {
   iconName: IconName;
