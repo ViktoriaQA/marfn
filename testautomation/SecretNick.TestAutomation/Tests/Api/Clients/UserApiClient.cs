@@ -73,5 +73,24 @@ namespace Tests.Api.Clients
                 user.FirstName, user.LastName);
             return user;
         }
+
+        public async Task DeleteUserAsync(ulong userId, string adminUserCode)
+        {
+            var url = $"/api/users/{userId}?userCode={adminUserCode}";
+            var requestInfo = $"DELETE {url}";
+
+            Log.Information("Deleting user via API: {RequestInfo}", requestInfo);
+
+            var response = await ApiContext.DeleteAsync(url);
+
+            await ValidateResponseAsync(response, 204, requestInfo);
+
+            Log.Information("User deleted successfully: ID={UserId}", userId);
+        }
+
+        public async Task<UserCreationResponse> JoinRoomAsync(string roomCode, UserCreationDto user)
+        {
+            return await CreateUserAsync(roomCode, user);
+        }
     }
 }

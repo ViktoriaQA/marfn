@@ -91,3 +91,90 @@ Rule: User Retrieval
     When I get user details by ID
     Then I should see complete user information
     And I should see their gift preferences
+
+Rule: User Deletion
+
+  @positive @admin
+  Scenario: Admin successfully removes regular user from room
+    Given I am a room admin
+    And there is a regular user in my room
+    When I delete the regular user by their ID
+    Then the user should be removed successfully
+    And the user should no longer appear in the room participants list
+
+  @positive @admin
+  Scenario: Admin removes multiple users from room
+    Given I am a room admin
+    And there are 3 regular users in my room
+    When I delete 2 of the regular users
+    Then both users should be removed successfully
+    And only 1 regular user should remain in the room
+
+  @negative @authorization
+  Scenario: Regular user cannot delete other users
+    Given I am a regular user in a room
+    And there is another regular user in my room
+    When I try to delete the other user by their ID
+    Then the request should fail with status 403
+    And I should receive a "forbidden" error message
+
+  @negative @authorization
+  Scenario: Admin cannot delete themselves
+    Given I am a room admin
+    When I try to delete myself using my user ID
+    Then the request should fail with status 403
+    And I should receive a "cannot remove admin" error message
+
+  @negative @validation
+  Scenario: Cannot delete user with invalid ID
+    Given I am a room admin
+    When I try to delete user with ID 99999
+    Then the request should fail with status 404
+    And I should receive a "user not found" error message
+
+  @negative @authorization
+  Scenario: Cannot delete user with invalid admin code
+    Given there is a regular user in a room
+    When I try to delete the user with invalid admin code "invalid123"
+    Then the request should fail with status 404
+    And I should receive a "user not found" error message
+
+  @negative @business-rule
+  Scenario: Cannot delete users from closed room
+    Given I am a room admin
+    And there is a regular user in my room
+    And the room has been drawn and closed
+    When I try to delete the regular user
+    Then the request should fail with status 400
+    And I should receive a "room is closed" error message
+
+  @negative @authorization
+  Scenario: Admin from different room cannot delete users
+    Given I am a room admin in room A
+    And there is a regular user in room B
+    When I try to delete the user from room B using my admin code
+    Then the request should fail with status 403
+    And I should receive a "different rooms" error message
+
+  @negative @validation
+  Scenario Outline: Delete user with invalid parameters
+    Given I am a room admin
+    When I try to delete user with ID "<UserID>" and userCode "<UserCode>"
+    Then the request should fail with status <StatusCode>
+    
+    Examples:
+      | UserID | UserCode | StatusCode |
+      | 0      | admin123 | 400        |
+      | -1     | admin123 | 400        |
+      | 1      |          | 400        |
+      | 1      | null     | 400        |
+
+  @integration
+  Scenario: Complete user deletion workflow
+    Given I create a room as admin
+    And I add 3 regular users to the room
+    And all users have submitted their wish lists
+    When I delete 1 regular user
+    Then the user should be completely removed from the system
+    And the remaining users should still have their data intact
+    And the room should still be functional for the remaining participants

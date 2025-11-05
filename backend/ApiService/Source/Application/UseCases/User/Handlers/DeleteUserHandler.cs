@@ -10,7 +10,7 @@ namespace Epam.ItMarathon.ApiService.Application.UseCases.User.Handlers
     /// <summary>
     /// Handler for deleting user from room by admin's userCode.
     /// </summary>
-    public class DeleteUserHandler(IRoomRepository roomRepository) :
+    public class DeleteUserHandler(IRoomRepository roomRepository, IUserReadOnlyRepository userRepository) :
         IRequestHandler<DeleteUserCommand, Result<Unit, ValidationResult>>
     {
         public async Task<Result<Unit, ValidationResult>> Handle(DeleteUserCommand request,
@@ -23,6 +23,15 @@ namespace Epam.ItMarathon.ApiService.Application.UseCases.User.Handlers
             }
 
             var room = roomResult.Value;
+            
+            // Check if room is already closed (drawn)
+            if (room.ClosedOn is not null)
+            {
+                return Result.Failure<Unit, ValidationResult>(new BadRequestError([
+                    new FluentValidation.Results.ValidationFailure("room", "Cannot remove users from a closed room.")
+                ]));
+            }
+            
             var authUser = room.Users.FirstOrDefault(u => u.AuthCode.Equals(request.UserCode));
             if (authUser is null)
             {
@@ -38,11 +47,21 @@ namespace Epam.ItMarathon.ApiService.Application.UseCases.User.Handlers
                 ]));
             }
 
+            // Check if target user exists globally first
+            var targetUserGlobalResult = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+            if (targetUserGlobalResult.IsFailure)
+            {
+                return Result.Failure<Unit, ValidationResult>(new NotFoundError([
+                    new FluentValidation.Results.ValidationFailure("id", "User with specified id not found.")
+                ]));
+            }
+
+            // Check if target user belongs to the same room as admin
             var targetUser = room.Users.FirstOrDefault(u => u.Id == request.UserId);
             if (targetUser is null)
             {
-                return Result.Failure<Unit, ValidationResult>(new NotFoundError([
-                    new FluentValidation.Results.ValidationFailure("id", "User not found.")
+                return Result.Failure<Unit, ValidationResult>(new ForbiddenError([
+                    new FluentValidation.Results.ValidationFailure("id", "Admin and target user belong to different rooms.")
                 ]));
             }
 
