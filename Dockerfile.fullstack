@@ -1,0 +1,31 @@
+# Dockerfile.fullstack
+# Stage 1: Build backend
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS backend-build
+WORKDIR /src
+COPY backend/ApiService/Source/Api/ ./backend/ApiService/Source/Api/
+COPY backend/ApiService/Source/Application/ ./backend/ApiService/Source/Application/
+COPY backend/ApiService/Source/Domain/ ./backend/ApiService/Source/Domain/
+COPY backend/ApiService/Source/Infrastructure/ ./backend/ApiService/Source/Infrastructure/
+RUN dotnet restore backend/ApiService/Source/Api/Api.csproj
+RUN dotnet publish backend/ApiService/Source/Api/Api.csproj -c Release -o /app/backend
+
+# Stage 2: Build frontend (React)
+FROM node:20 AS react-build
+WORKDIR /frontend
+COPY frontend/react/package.json frontend/react/package-lock.json ./
+RUN npm ci
+COPY frontend/react/ ./
+RUN npm run build
+
+# Stage 3: Runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+# Install nginx
+RUN apt-get update && apt-get install -y nginx curl && rm -rf /var/lib/apt/lists/*
+COPY --from=backend-build /app/backend ./backend
+COPY --from=react-build /frontend/dist ./frontend
+COPY nginx.conf.template /app/nginx.conf.template
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+EXPOSE 8080
+CMD ["/app/start.sh"]
