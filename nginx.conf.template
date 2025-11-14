@@ -1,0 +1,50 @@
+events {}events {}
+
+http {http {
+
+    server {    server {
+
+        listen HEROKU_PORT;        listen HEROKU_PORT;
+
+        server_name _;        server_name _;
+
+        root /app/frontend;        
+
+        index index.html;        # Frontend (React)
+
+        location / {
+
+        location /api/ {            root /app/frontend;
+
+            proxy_pass http://127.0.0.1:5000/;            try_files $uri $uri/ /index.html;
+
+            proxy_set_header Host $host;            add_header Cache-Control "public, max-age=3600";
+
+            proxy_set_header X-Real-IP $remote_addr;        }
+
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;        
+
+            proxy_set_header X-Forwarded-Proto $scheme;        # Backend API
+
+        }        location /api/ {
+
+            proxy_pass http://127.0.0.1:5000/;
+
+        location / {            proxy_set_header Host $host;
+
+            try_files $uri /index.html;            proxy_set_header X-Real-IP $remote_addr;
+
+        }            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    }            proxy_set_header X-Forwarded-Proto $scheme;
+
+}        }
+
+        
+        # Health check
+        location /health {
+            return 200 'healthy\n';
+            add_header Content-Type text/plain;
+        }
+    }
+}
